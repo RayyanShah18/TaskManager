@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f4f4;
+            padding-top: 50px;
+        }
+
+        #taskManager {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .task {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border: 1px solid #ddd;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+
+        .completed {
+            background-color: #dff0d8;
+            text-decoration: line-through;
+        }
+
+        #filterOptions {
+            margin-top: 10px;
+        }
+
+        .filterBtn {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        #taskCounter {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="jumbotron">
+        <h1 class="display-4">Task Manager</h1>
+    </div>
+
+    <div id="taskManager" class="mx-auto">
+        <div class="input-group mb-3">
+            <input type="text" id="taskInput" class="form-control" placeholder="Add a new task">
+            <div class="input-group-append">
+                <button id="addTaskBtn" class="btn btn-success">Add Task</button>
+            </div>
+        </div>
+
+        <ul id="taskList" class="list-group"></ul>
+
+        <div id="filterOptions">
+            <button class="filterBtn btn btn-info" onclick="filterTasks('all')">All Tasks</button>
+            <button class="filterBtn btn btn-info" onclick="filterTasks('pending')">Pending Tasks</button>
+            <button class="filterBtn btn btn-info" onclick="filterTasks('completed')">Completed Tasks</button>
+        </div>
+
+        <div id="taskCounter">
+            <p>Total Tasks: <span id="totalTasks" class="badge badge-secondary">0</span> |
+                Completed Tasks: <span id="completedTasks" class="badge badge-success">0</span></p>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap & JS  -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    // JavaScript code for task management
+    const taskInput = document.getElementById('taskInput');
+    const addTaskBtn = document.getElementById('addTaskBtn');
+    const taskList = document.getElementById('taskList');
+    const totalTasksSpan = document.getElementById('totalTasks');
+    const completedTasksSpan = document.getElementById('completedTasks');
+
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+    // Function to render tasks
+    function renderTasks() {
+        taskList.innerHTML = '';
+        tasks.forEach(task => {
+            const taskItem = document.createElement('li');
+            taskItem.className = `task ${task.completed ? 'completed' : ''}`;
+            taskItem.innerHTML = `
+                <span>${task.text}</span>
+                <button onclick="toggleTaskStatus(${task.id})">Toggle Status</button>
+                <button onclick="deleteTask(${task.id})">Delete</button>
+            `;
+            taskList.appendChild(taskItem);
+        });
+
+        // task counter
+        totalTasksSpan.textContent = tasks.length;
+        completedTasksSpan.textContent = tasks.filter(task => task.completed).length;
+
+        // Save tasks to local storage
+        saveTasksToLocalStorage();
+    }
+
+    // Function to add a new task
+    function addTask() {
+        const taskText = taskInput.value.trim();
+        if (taskText !== '') {
+            const newTask = {
+                id: Date.now(),
+                text: taskText,
+                completed: false,
+            };
+            tasks.push(newTask);
+            renderTasks();
+            taskInput.value = '';
+        }
+    }
+
+  
+    function toggleTaskStatus(taskId) {
+        tasks = tasks.map(task =>
+            task.id === taskId ? { ...task, completed: !task.completed } : task
+        );
+        renderTasks();
+    }
+
+    // Function to delete a task
+    function deleteTask(taskId) {
+        tasks = tasks.filter(task => task.id !== taskId);
+        renderTasks();
+    }
+
+    // Function  i used to filter tasks based on status (all/pending/completed)
+    function filterTasks(status) {
+        if (status === 'all') {
+            renderTasks();
+        } else {
+            const filteredTasks = tasks.filter(task =>
+                status === 'pending' ? !task.completed : task.completed
+            );
+            taskList.innerHTML = '';
+            filteredTasks.forEach(task => {
+                const taskItem = document.createElement('li');
+                taskItem.className = `task ${task.completed ? 'completed' : ''}`;
+                taskItem.innerHTML = `
+                    <span>${task.text}</span>
+                    <button onclick="toggleTaskStatus(${task.id})">Toggle Status</button>
+                    <button onclick="deleteTask(${task.id})">Delete</button>
+                `;
+                taskList.appendChild(taskItem);
+            });
+        }
+    }
+
+    // Function to save tasks to local storage
+    function saveTasksToLocalStorage() {
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    // Event listeners
+    addTaskBtn.addEventListener('click', addTask);
+    renderTasks(); 
+</script>
+
+</body>
+</html>
